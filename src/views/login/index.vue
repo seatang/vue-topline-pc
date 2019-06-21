@@ -12,22 +12,35 @@
       >
         <el-form-item prop="mobile">
           <el-input
+            type="tel"
             v-model="userForm.mobile"
             placeholder="手机号码"
           ></el-input>
         </el-form-item>
         <el-form-item prop="code">
-          <el-col :span="15">
+          <el-col :span="13">
             <el-input
+              type="number"
               v-model="userForm.code"
               placeholder="验证码"
             ></el-input>
           </el-col>
           <el-col
-            :offset="2"
-            :span="7"
+            :offset="1"
+            :span="8"
           >
-            <el-button plain>获取验证码</el-button>
+            <el-button
+              v-show="sending"
+              @click="healdSendCode"
+            >
+              获取验证码
+            </el-button>
+            <el-button
+              v-show="!sending"
+              disabled
+            >
+              {{ countDown }}秒后重新发送
+            </el-button>
           </el-col>
         </el-form-item>
         <el-form-item>
@@ -43,7 +56,13 @@
 </template>
 
 <script>
+import axios from 'axios'
+
+// 加载极验SDK文件
+import '@/vendor/gt.js'
+
 export default {
+  name: 'login',
   data () {
     return {
       userForm: {
@@ -60,7 +79,9 @@ export default {
           { required: true, message: '请输入验证码', trigger: 'blur' },
           { min: 6, max: 6, message: '6为验证码', trigger: 'blur' }
         ]
-      }
+      },
+      countDown: 60,
+      sending: true
     }
   },
   methods: {
@@ -68,10 +89,68 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           // 验证通过
+          axios({
+            method: 'POST',
+            url: 'http://ttapi.research.itcast.cn/mp/v1_0/authorizations',
+            data: this.userForm
+          }).then(res => {
+            this.$router.push({ name: 'home' })
+          })
         } else {
           // 验证失败
           return false
         }
+      })
+    },
+    // 发送验证码
+    healdSendCode () {
+      let mobile = this.userForm.mobile
+      /** 由于定时器中拿不到组件实例，需要重新接收一下this */
+      let _this = this
+      axios({
+        method: 'GET',
+        url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${mobile}`
+      }).then(res => {
+        const { data } = res.data
+        window.initGeetest({
+          gt: data.gt,
+          challenge: data.challenge,
+          offline: !data.success,
+          new_captcha: data.new_captcha,
+          /**   隐式， 直接弹出 */
+          product: 'bind'
+        }, function (captchaObj) {
+          captchaObj.onReady(function () {
+            /** 显示验证的窗口 */
+            captchaObj.verify()
+          }).onSuccess(function () {
+            /** 验证成功 */
+            const { geetest_challenge: challenge,
+              geetest_seccode: seccode,
+              geetest_validate: validate } =
+              captchaObj.getValidate()
+
+            axios({
+              method: 'GET',
+              url: `http://ttapi.research.itcast.cn/mp/v1_0/sms/codes/${mobile}`,
+              params: {
+                challenge, seccode, validate
+              }
+            }).then(res => {
+              /** 倒计时 */
+              _this.sending = false
+              let setTimer = setInterval(() => {
+                _this.countDown--
+                if (_this.countDown <= 0) {
+                  _this.sending = true
+                  window.clearInterval(setTimer)
+                }
+              }, 1000)
+            })
+          }).onError(function () {
+            /** 验证失败 */
+          })
+        })
       })
     }
   }
