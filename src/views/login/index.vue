@@ -4,16 +4,38 @@
       <div class="login-logo">
         <img src="./logo_index.png">
       </div>
-      <el-form :model="userForm" :rules="rules" ref="userForm" class="demo-ruleForm userForm">
+      <el-form
+        :model="userForm"
+        :rules="rules"
+        ref="userForm"
+        class="demo-ruleForm userForm"
+      >
         <el-form-item prop="mobile">
-          <el-input v-model="userForm.mobile" placeholder="手机号码"></el-input>
+          <el-input
+            v-model="userForm.mobile"
+            placeholder="手机号码"
+          ></el-input>
         </el-form-item>
         <el-form-item prop="code">
-          <el-input v-model="userForm.code" placeholder="验证码"></el-input>
-          <el-button type="primary">获取验证码</el-button>
+          <el-col :span="15">
+            <el-input
+              v-model="userForm.code"
+              placeholder="验证码"
+            ></el-input>
+          </el-col>
+          <el-col
+            :offset="2"
+            :span="7"
+          >
+            <el-button plain>获取验证码</el-button>
+          </el-col>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitForm('userForm')">登录</el-button>
+          <el-button
+            type="primary"
+            class="user-login-btn"
+            @click="submitForm('userForm')"
+          >登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -78,6 +100,9 @@ export default {
       img {
         width: 200px;
       }
+    }
+    .user-login-btn {
+      width: 100%;
     }
   }
 }
