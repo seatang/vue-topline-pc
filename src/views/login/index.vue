@@ -15,14 +15,16 @@
             type="tel"
             v-model="userForm.mobile"
             placeholder="手机号码"
+            maxlength="11"
           ></el-input>
         </el-form-item>
         <el-form-item prop="code">
-          <el-col :span="13">
+          <el-col :span="14">
             <el-input
-              type="number"
+              type="text"
               v-model="userForm.code"
               placeholder="验证码"
+              maxlength="6"
             ></el-input>
           </el-col>
           <el-col
@@ -73,11 +75,11 @@ export default {
       rules: {
         mobile: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
-          { min: 11, max: 11, message: '11位手机号', trigger: 'blur' }
+          { pattern: /\d{11}/, len: 11, message: '11位手机号', trigger: 'blur' }
         ],
         code: [
           { required: true, message: '请输入验证码', trigger: 'blur' },
-          { min: 6, max: 6, message: '6为验证码', trigger: 'blur' }
+          { pattern: /\d{6}/, len: 6, message: '6为验证码', trigger: 'blur' }
         ]
       },
       countDown: 60,
@@ -85,8 +87,9 @@ export default {
     }
   },
   methods: {
-    submitForm (formName) {
-      this.$refs[formName].validate(valid => {
+    // 登录验证
+    submitForm () {
+      this.$refs['userForm'].validate(valid => {
         if (valid) {
           // 验证通过
           axios({
@@ -102,11 +105,19 @@ export default {
         }
       })
     },
-    // 发送验证码
+    // 发送前验证手机号
     healdSendCode () {
+      this.$refs['userForm'].validateField('mobile', errorMessage => {
+        if (errorMessage) {
+          return
+        }
+        this.showGeetest()
+      })
+    },
+
+    // 显示验证码
+    showGeetest () {
       let mobile = this.userForm.mobile
-      /** 由于定时器中拿不到组件实例，需要重新接收一下this */
-      let _this = this
       axios({
         method: 'GET',
         url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${mobile}`
@@ -117,19 +128,19 @@ export default {
           challenge: data.challenge,
           offline: !data.success,
           new_captcha: data.new_captcha,
-          /**   隐式， 直接弹出 */
+          // 隐式,直接弹出
           product: 'bind'
-        }, function (captchaObj) {
-          captchaObj.onReady(function () {
-            /** 显示验证的窗口 */
+        }, (captchaObj) => {
+          captchaObj.onReady(() => {
+            // 显示验证的窗口
             captchaObj.verify()
-          }).onSuccess(function () {
-            /** 验证成功 */
+          }).onSuccess(() => {
+            // 验证成功
             const { geetest_challenge: challenge,
               geetest_seccode: seccode,
               geetest_validate: validate } =
               captchaObj.getValidate()
-
+            // 发送请求，获取验证码
             axios({
               method: 'GET',
               url: `http://ttapi.research.itcast.cn/mp/v1_0/sms/codes/${mobile}`,
@@ -137,22 +148,27 @@ export default {
                 challenge, seccode, validate
               }
             }).then(res => {
-              /** 倒计时 */
-              _this.sending = false
-              let setTimer = setInterval(() => {
-                _this.countDown--
-                if (_this.countDown <= 0) {
-                  _this.sending = true
-                  window.clearInterval(setTimer)
-                }
-              }, 1000)
+              this.getCountdown()
             })
           }).onError(function () {
-            /** 验证失败 */
+            // 验证失败
           })
         })
       })
+    },
+
+    // 倒计时
+    getCountdown () {
+      this.sending = false
+      let setTimer = setInterval(() => {
+        this.countDown--
+        if (this.countDown <= 0) {
+          this.sending = true
+          window.clearInterval(setTimer)
+        }
+      }, 1000)
     }
+
   }
 }
 </script>
