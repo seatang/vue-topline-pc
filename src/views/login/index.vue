@@ -71,6 +71,7 @@ export default {
         mobile: '',
         code: ''
       },
+      userInfo: {},
       // 表单验证
       rules: {
         mobile: [
@@ -97,7 +98,12 @@ export default {
             url: 'http://ttapi.research.itcast.cn/mp/v1_0/authorizations',
             data: this.userForm
           }).then(res => {
+            this.userInfo = res.data.data
+            // 保存登录信息到本地
+            window.localStorage.setItem('user_info', JSON.stringify(this.userInfo))
             this.$router.push({ name: 'home' })
+          }).catch(e => {
+            this.$message.error('登录失败')
           })
         } else {
           // 验证失败
@@ -148,6 +154,10 @@ export default {
                 challenge, seccode, validate
               }
             }).then(res => {
+              this.$message({
+                message: '验证码发送成功！',
+                type: 'success'
+              })
               this.getCountdown()
             })
           }).onError(function () {
