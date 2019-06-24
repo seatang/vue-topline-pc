@@ -4,7 +4,10 @@ import Router from 'vue-router'
 // 配置一级路由
 import layout from '@/views/layout'
 import AppLogin from '@/views/login'
+// 载入第三方包
 import nprogress from 'nprogress'
+// 载入本地用户信息
+import { getUser } from '@/utils/auth.js'
 
 Vue.use(Router)
 
@@ -41,7 +44,7 @@ const router = new Router({
 // 开启进度条
 router.beforeEach((to, from, next) => {
   nprogress.start()
-  const userInfo = window.localStorage.getItem('user_info')
+  const userInfo = getUser()
   if (to.path !== '/login') {
     if (!userInfo) {
       next({

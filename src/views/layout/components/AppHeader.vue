@@ -29,6 +29,8 @@
 </template>
 
 <script type="text/javascript">
+import { getUser } from '@/utils/auth.js'
+
 export default {
   name: 'AppHeader',
   data () {
@@ -37,7 +39,7 @@ export default {
     }
   },
   created () {
-    this.userInfo = JSON.parse(window.localStorage.getItem('user_info'))
+    this.userInfo = getUser()
   }
 }
 </script>

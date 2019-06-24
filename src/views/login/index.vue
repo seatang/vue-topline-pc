@@ -59,6 +59,7 @@
 
 <script>
 import axios from 'axios'
+import { seveUser } from '@/utils/auth.js'
 
 // 加载极验SDK文件
 import '@/vendor/gt.js'
@@ -100,7 +101,8 @@ export default {
           }).then(res => {
             this.userInfo = res.data.data
             // 保存登录信息到本地
-            window.localStorage.setItem('user_info', JSON.stringify(this.userInfo))
+            // window.localStorage.setItem('user_info', JSON.stringify(this.userInfo))
+            seveUser(this.userInfo)
             this.$router.push({ name: 'home' })
           }).catch(e => {
             this.$message.error('登录失败')
