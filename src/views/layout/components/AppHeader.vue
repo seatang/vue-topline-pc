@@ -5,8 +5,8 @@
         人生就是一次次幸福的相聚，夹杂着一次次伤感的别离</div>
     </el-col>
     <el-col
-      :offset="11"
-      :span="3"
+      :offset="10"
+      :span="4"
     >
       <div class="grid-content bg-purple">
         <el-dropdown>
