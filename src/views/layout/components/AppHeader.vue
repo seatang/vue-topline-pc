@@ -20,6 +20,7 @@
             <el-dropdown-item
               command="e"
               divided
+              @click.native="healdlogout"
             >退出</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
@@ -29,7 +30,7 @@
 </template>
 
 <script type="text/javascript">
-import { getUser } from '@/utils/auth.js'
+import { getUser, removeUser } from '@/utils/auth.js'
 
 export default {
   name: 'AppHeader',
@@ -40,6 +41,26 @@ export default {
   },
   created () {
     this.userInfo = getUser()
+  },
+  methods: {
+    healdlogout () {
+      this.$confirm('确定要退出吗？', '退出提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        removeUser()
+        this.$message({
+          type: 'success',
+          message: '退出成功!'
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '退出已取消'
+        })
+      })
+    }
   }
 }
 </script>
