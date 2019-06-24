@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 import Vue from 'vue'
 import Router from 'vue-router'
 // 配置一级路由
@@ -8,20 +9,31 @@ Vue.use(Router)
 
 export default new Router({
   routes: [{
-    path: '/',
-    component: layout,
-    children: [
-      {
-        name: 'home',
-        path: '',
-        component: () => import('@/views/home')
-      }
-    ]
-  },
-  {
-    name: 'login',
-    path: '/login',
-    component: AppLogin
-  }
+      naem: 'layout',
+      path: '/',
+      component: layout,
+      children: [{
+          name: 'home',
+          path: '',
+          component: () => import('@/views/home')
+        },
+        {
+          name: 'account',
+          path: '/account',
+          component: () => import('@/views/account')
+        },
+        {
+          name: 'publish',
+          path: '/publish',
+          component: () => import('@/views/publish')
+        }
+      ]
+
+    },
+    {
+      name: 'AppLogin',
+      path: 'login',
+      component: AppLogin
+    }
   ]
 })
