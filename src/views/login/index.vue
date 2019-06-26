@@ -58,7 +58,6 @@
 </template>
 
 <script>
-import axios from 'axios'
 import { seveUser } from '@/utils/auth.js'
 
 // 加载极验SDK文件
@@ -69,8 +68,8 @@ export default {
   data () {
     return {
       userForm: {
-        mobile: '',
-        code: ''
+        mobile: '17600200000',
+        code: '123456'
       },
       userInfo: {},
       // 表单验证
@@ -94,24 +93,28 @@ export default {
       this.$refs['userForm'].validate(valid => {
         if (valid) {
           // 验证通过
-          axios({
-            method: 'POST',
-            url: 'http://ttapi.research.itcast.cn/mp/v1_0/authorizations',
-            data: this.userForm
-          }).then(res => {
-            this.userInfo = res.data.data
-            // 保存登录信息到本地
-            // window.localStorage.setItem('user_info', JSON.stringify(this.userInfo))
-            seveUser(this.userInfo)
-            this.$router.push({ name: 'home' })
-          }).catch(e => {
-            this.$message.error('登录失败')
-          })
+          this.submitTologin()
         } else {
           // 验证失败
           return false
         }
       })
+    },
+    async submitTologin () {
+      try {
+        // 验证通过
+        const res = await this.$axios({
+          method: 'POST',
+          url: 'authorizations',
+          data: this.userForm
+        })
+        this.userInfo = res.data.data
+        // 保存登录信息到本地
+        seveUser(this.userInfo)
+        this.$router.push({ name: 'home' })
+      } catch {
+        this.$message.error('登录失败')
+      }
     },
     // 发送前验证手机号
     healdSendCode () {
@@ -122,49 +125,46 @@ export default {
         this.showGeetest()
       })
     },
-
     // 显示验证码
-    showGeetest () {
+    async showGeetest () {
       let mobile = this.userForm.mobile
-      axios({
+      const res = await this.$axios({
         method: 'GET',
-        url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${mobile}`
-      }).then(res => {
-        const { data } = res.data
-        window.initGeetest({
-          gt: data.gt,
-          challenge: data.challenge,
-          offline: !data.success,
-          new_captcha: data.new_captcha,
-          // 隐式,直接弹出
-          product: 'bind'
-        }, (captchaObj) => {
-          captchaObj.onReady(() => {
-            // 显示验证的窗口
-            captchaObj.verify()
-          }).onSuccess(() => {
-            // 验证成功
-            const { geetest_challenge: challenge,
-              geetest_seccode: seccode,
-              geetest_validate: validate } =
-              captchaObj.getValidate()
-            // 发送请求，获取验证码
-            axios({
-              method: 'GET',
-              url: `http://ttapi.research.itcast.cn/mp/v1_0/sms/codes/${mobile}`,
-              params: {
-                challenge, seccode, validate
-              }
-            }).then(res => {
-              this.$message({
-                message: '验证码发送成功！',
-                type: 'success'
-              })
-              this.getCountdown()
-            })
-          }).onError(function () {
-            // 验证失败
+        url: `/captchas/${mobile}`
+      })
+      const { data } = res.data
+      window.initGeetest({
+        gt: data.gt,
+        challenge: data.challenge,
+        offline: !data.success,
+        new_captcha: data.new_captcha,
+        // 隐式,直接弹出
+        product: 'bind'
+      }, async (captchaObj) => {
+        captchaObj.onReady(() => {
+          // 显示验证的窗口
+          captchaObj.verify()
+        }).onSuccess(async () => {
+          // 验证成功
+          const { geetest_challenge: challenge,
+            geetest_seccode: seccode,
+            geetest_validate: validate } =
+            captchaObj.getValidate()
+          // 发送请求，获取验证码
+          await this.$axios({
+            method: 'GET',
+            url: `/sms/codes/${mobile}`,
+            params: {
+              challenge, seccode, validate
+            }
           })
+          this.$message({
+            message: '验证码发送成功！',
+            type: 'success'
+          })
+          this.getCountdown()
+        }).onError(function () {
+          // 验证失败
         })
       })
     },
