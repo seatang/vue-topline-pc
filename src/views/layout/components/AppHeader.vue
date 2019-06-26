@@ -54,6 +54,7 @@ export default {
           type: 'success',
           message: '退出成功!'
         })
+        this.$router.push({ name: 'login' })
       }).catch(() => {
         this.$message({
           type: 'info',

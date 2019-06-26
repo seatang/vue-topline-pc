@@ -50,6 +50,7 @@
             type="primary"
             class="user-login-btn"
             @click="submitForm('userForm')"
+            :loading="loginLoding"
           >登录</el-button>
         </el-form-item>
       </el-form>
@@ -68,7 +69,7 @@ export default {
   data () {
     return {
       userForm: {
-        mobile: '17600200000',
+        mobile: '13911111111',
         code: '123456'
       },
       userInfo: {},
@@ -84,11 +85,12 @@ export default {
         ]
       },
       countDown: 60,
-      sending: true
+      sending: true,
+      loginLoding: false
     }
   },
   methods: {
-    // 登录验证
+    // 登录前手机验证
     submitForm () {
       this.$refs['userForm'].validate(valid => {
         if (valid) {
@@ -100,20 +102,24 @@ export default {
         }
       })
     },
+    // 登录验证
     async submitTologin () {
       try {
+        this.loginLoding = true
         // 验证通过
         const res = await this.$axios({
           method: 'POST',
           url: 'authorizations',
           data: this.userForm
         })
-        this.userInfo = res.data.data
+        this.userInfo = res.data
         // 保存登录信息到本地
         seveUser(this.userInfo)
         this.$router.push({ name: 'home' })
+        this.loginLoding = false
       } catch {
         this.$message.error('登录失败')
+        this.loginLoding = false
       }
     },
     // 发送前验证手机号
@@ -132,7 +138,7 @@ export default {
         method: 'GET',
         url: `/captchas/${mobile}`
       })
-      const { data } = res.data
+      const { data } = res
       window.initGeetest({
         gt: data.gt,
         challenge: data.challenge,

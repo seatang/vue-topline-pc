@@ -7,7 +7,9 @@ import AppLogin from '@/views/login'
 // 载入第三方包
 import nprogress from 'nprogress'
 // 载入本地用户信息
-import { getUser } from '@/utils/auth.js'
+import {
+  getUser
+} from '@/utils/auth.js'
 
 Vue.use(Router)
 
@@ -30,6 +32,11 @@ const router = new Router({
           name: 'publish',
           path: '/publish',
           component: () => import('@/views/publish')
+        },
+        {
+          name: 'article',
+          path: '/article',
+          component: () => import('@/views/article')
         }
       ]
 
@@ -68,4 +75,5 @@ router.beforeEach((to, from, next) => {
 router.afterEach((to, from) => {
   nprogress.done()
 })
+
 export default router
