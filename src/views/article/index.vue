@@ -1,7 +1,69 @@
 <template>
   <div class="">
     <el-card class="filst-card">
-      <span>搜索</span>
+      <div
+        slot="header"
+        class="clearfix"
+      >
+        <span>搜索</span>
+      </div>
+      <el-form
+        ref="querit"
+        :model="querit"
+        label-width="100px"
+      >
+        <el-form-item label="文章状态：">
+          <el-radio-group v-model="querit.status">
+            <el-radio label="">全部</el-radio>
+            <el-radio
+              v-for="(item,index) in statusTypes"
+              :key="item.type"
+              :label="index"
+            >
+              {{item.label}}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="文章频道：">
+          <el-select
+            v-model="querit.channel_id"
+            placeholder="请选择文章频道"
+            size="small"
+          >
+            <el-option
+              :value="item.id"
+              v-for="item in channel"
+              :key="item.id"
+              :label="item.name"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="发布时间：">
+          <el-date-picker
+            type="date"
+            placeholder="选择开始日期"
+            v-model="querit.begin_pubdate"
+            size="small"
+            value-format="yyyy-MM-dd"
+          ></el-date-picker>
+          <strong>-</strong>
+          <el-date-picker
+            type="date"
+            placeholder="选择开始日期"
+            v-model="querit.end_pubdate"
+            size="small"
+            value-format="yyyy-MM-dd"
+          ></el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-button
+            type="primary"
+            @click="selectAcrticle"
+            :loading="articleLoading"
+          >搜索</el-button>
+        </el-form-item>
+      </el-form>
     </el-card>
     <el-card class="last-card">
       <div
@@ -32,7 +94,7 @@
           <el-table-column
             prop="title"
             label="标题"
-            width="200"
+            width="300"
           >
           </el-table-column>
           <el-table-column
@@ -76,6 +138,7 @@
           layout="prev, pager, next"
           :total="totalCount"
           @current-change="getChangePage"
+          :disabled="articleLoading"
         >
         </el-pagination>
       </div>
@@ -91,6 +154,7 @@ export default {
     return {
       //  文章数据列表
       articleList: [],
+      articleTitle: '',
       //  请求参数
       querit: {
         // 审核状态
@@ -100,12 +164,13 @@ export default {
         // 开始时间
         begin_pubdate: '',
         // 结束时间
-        end_pubdate: '',
-        // 页码
-        page: 1,
-        // 当前页显示的数据条数
-        per_page: 10
+        end_pubdate: ''
+
       },
+      // 页码
+      page: 1,
+      // 当前页显示的数据条数
+      per_page: 10,
       // 加载中
       articleLoading: false,
       // 审核状态
@@ -113,27 +178,37 @@ export default {
         { type: 'info', label: '草稿' },
         { type: '', label: '待审核' },
         { type: 'success', label: '审核通过' },
-        { type: 'warning', label: '审核为通过' },
+        { type: 'warning', label: '审核未通过' },
         { type: 'danger', label: '已删除' }
       ],
       //  总数据条数
-      totalCount: 0
+      totalCount: 0,
+      channel: []
     }
   },
   created () {
     this.getAticleList()
+    this.getChannel()
   },
   methods: {
     // 获取数据列表
     async getAticleList () {
       try {
         this.articleLoading = true
+        // 过滤多余的查询条件
+        const selectList = {}
+        for (let key in this.querit) {
+          if (this.querit[key] !== null && this.querit[key] !== undefined && this.querit[key] !== '') {
+            selectList[key] = this.querit[key]
+          }
+        }
         const res = await this.$axios({
           method: 'GET',
           url: '/articles',
           params: {
-            page: this.querit.page,
-            per_page: this.querit.per_page
+            page: this.page,
+            per_page: this.per_page,
+            ...selectList
           }
         })
         this.articleList = res.data.results
@@ -150,13 +225,12 @@ export default {
     // 获取当前页数据
     getChangePage (page) {
       //   console.log(page)
-      this.querit.page = page
+      this.page = page
       this.getAticleList()
     },
     // 删除文章确认
     async delAticleOK (aticleId) {
       try {
-        console.log(aticleId)
         await this.$confirm('确定要删除吗？', '删除提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
@@ -166,13 +240,14 @@ export default {
         this.delAticle(aticleId)
       } catch (error) {
         this.$message({
-          type: 'info',
+          type: 'error',
           message: '已取消删除!'
         })
       }
     },
     // 删除文章
     async delAticle (aticleId) {
+      console.log(aticleId)
       try {
         await this.$axios({
           method: 'DELETE',
@@ -183,10 +258,23 @@ export default {
           message: '删除成功!'
         })
       } catch (error) {
-        this.$message({
-          type: 'info',
-          message: '删除失败!'
+        this.$message.error('删除失败!')
+      }
+    },
+    // 搜索数据
+    selectAcrticle () {
+      this.page = 1
+      this.getAticleList()
+    },
+    async getChannel () {
+      try {
+        const data = await this.$axios({
+          method: 'GET',
+          url: '/channels'
         })
+        this.channel = data.data.channels
+      } catch (error) {
+        this.$message.error('获取文章频道出错了：', error)
       }
     }
   },
@@ -197,8 +285,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.filst-card,
-.aticleTable {
-  margin-bottom: 20px;
+.block {
+  text-align: center;
 }
 </style>

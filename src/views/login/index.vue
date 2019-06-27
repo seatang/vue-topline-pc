@@ -70,7 +70,7 @@ export default {
     return {
       userForm: {
         mobile: '13911111111',
-        code: '123456'
+        code: '246810'
       },
       userInfo: {},
       // 表单验证
