@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import axios from 'axios'
+import JSONbig from 'json-bigint'
 
 //  配置 element-ui
 import Element from 'element-ui'
@@ -17,6 +18,15 @@ import {
 // axios.defaults.baseURL = 'http://toutiao.course.itcast.cn/mp/v1_0'
 axios.defaults.baseURL = 'http://ttapi.research.itcast.cn/mp/v1_0'
 Vue.use(Element)
+
+// 利用第三方json-bigint处理响应数据
+axios.defaults.transformResponse = [function (data) {
+  try {
+    return JSONbig.parse(data)
+  } catch (error) {
+    return data
+  }
+}]
 
 // 请求拦截器
 axios.interceptors.request.use(config => {

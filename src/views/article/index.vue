@@ -126,7 +126,7 @@
                 size="small"
                 type="danger"
                 :aticleId="scope.row.id"
-                @click="delAticleOK(scope.row.id)"
+                @click="delAticleOK(scope.row)"
               >删除</el-button>
             </template>
           </el-table-column>
@@ -229,7 +229,7 @@ export default {
       this.getAticleList()
     },
     // 删除文章确认
-    async delAticleOK (aticleId) {
+    async delAticleOK (item) {
       try {
         await this.$confirm('确定要删除吗？', '删除提示', {
           confirmButtonText: '确定',
@@ -237,7 +237,7 @@ export default {
           type: 'warning'
         })
         // 调用删除函数
-        this.delAticle(aticleId)
+        this.delAticle(item)
       } catch (error) {
         this.$message({
           type: 'error',
@@ -246,12 +246,11 @@ export default {
       }
     },
     // 删除文章
-    async delAticle (aticleId) {
-      console.log(aticleId)
+    async delAticle (item) {
       try {
         await this.$axios({
           method: 'DELETE',
-          url: `/articles/${aticleId}`
+          url: `/articles/${item.id}`
         })
         this.$message({
           type: 'success',
