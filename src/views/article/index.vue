@@ -25,19 +25,7 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="文章频道：">
-          <el-select
-            v-model="querit.channel_id"
-            placeholder="请选择文章频道"
-            size="small"
-          >
-            <el-option
-              :value="item.id"
-              v-for="item in channel"
-              :key="item.id"
-              :label="item.name"
-            >
-            </el-option>
-          </el-select>
+          <article-changnels v-model="querit.channel_id"></article-changnels>
         </el-form-item>
         <el-form-item label="发布时间：">
           <el-date-picker
@@ -148,6 +136,7 @@
 </template>
 
 <script type="text/javascript">
+import ArticleChangnels from '@/components/channels'
 export default {
   name: 'ArticleList',
   data () {
@@ -182,13 +171,11 @@ export default {
         { type: 'danger', label: '已删除' }
       ],
       //  总数据条数
-      totalCount: 0,
-      channel: []
+      totalCount: 0
     }
   },
   created () {
     this.getAticleList()
-    this.getChannel()
   },
   methods: {
     // 获取数据列表
@@ -208,7 +195,7 @@ export default {
           params: {
             page: this.page,
             per_page: this.per_page,
-            ...selectList
+            ...selectList // ES6语法，将一个对象合并到另一个对象中
           }
         })
         this.articleList = res.data.results
@@ -256,6 +243,7 @@ export default {
           type: 'success',
           message: '删除成功!'
         })
+        this.getAticleList()
       } catch (error) {
         this.$message.error('删除失败!')
       }
@@ -264,21 +252,10 @@ export default {
     selectAcrticle () {
       this.page = 1
       this.getAticleList()
-    },
-    async getChannel () {
-      try {
-        const data = await this.$axios({
-          method: 'GET',
-          url: '/channels'
-        })
-        this.channel = data.data.channels
-      } catch (error) {
-        this.$message.error('获取文章频道出错了：', error)
-      }
     }
   },
   components: {
-
+    ArticleChangnels
   }
 }
 </script>
